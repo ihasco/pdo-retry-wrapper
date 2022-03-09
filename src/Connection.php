@@ -116,10 +116,12 @@ class Connection extends PDO
     {
         return $this->getPdo()->errorInfo();
     }
+    #[\ReturnTypeWillChange]
     public function exec($statement)
     {
         return $this->getPdo()->exec($statement);
     }
+    #[\ReturnTypeWillChange]
     public function getAttribute($attribute)
     {
         return $this->getPdo()->getAttribute($attribute);
@@ -132,10 +134,12 @@ class Connection extends PDO
     {
         return $this->getPdo()->lastInsertId($name);
     }
+    #[\ReturnTypeWillChange]
     public function prepare($statement, $driver_options = [])
     {
         return $this->getPdo()->prepare($statement, $driver_options);
     }
+    #[\ReturnTypeWillChange]
     public function quote($string, $parameter_type = PDO::PARAM_STR)
     {
         return $this->getPdo()->quote($string, $parameter_type);
