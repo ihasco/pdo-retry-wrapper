@@ -4,6 +4,7 @@ namespace iHasco\PdoRetryWrapper;
 
 use PDO;
 use Closure;
+use Exception;
 use Throwable;
 use PDOStatement;
 use BadMethodCallException;
@@ -42,11 +43,10 @@ class Connection extends PDO
                 return $this->connectAndPerformQuery($sql, $bindings, $options, $forceReconnect);
             } catch (Throwable $e) {
                 if (!$this->causedByLostConnection($e)) {
-                    throw $e;
+                    $this->throw($e);
                 }
 
                 if ($this->transactionActive) {
-                    $this->transactionActive = false;
                     break;
                 }
 
@@ -55,6 +55,13 @@ class Connection extends PDO
             }
         }
         return $this->throwConnectionException($e, $sql, $bindings);
+    }
+
+    protected function throw(Exception $exception): void
+    {
+        $this->transactionActive = false;
+
+        throw $exception;
     }
 
     private function throwConnectionException(Throwable $originalException, string $sql, ?array $bindings)
@@ -68,7 +75,7 @@ class Connection extends PDO
         if ($this->exceptionCallback) {
             call_user_func($this->exceptionCallback, $connectionException);
         }
-        throw $connectionException;
+        $this->throw($connectionException);
     }
 
     private function connectAndPerformQuery(string $sql, ?array $bindings, ?array $options = [], bool $forceReconnect = false): PDOStatement
@@ -180,6 +187,8 @@ class Connection extends PDO
     #[\ReturnTypeWillChange]
     public function query($statement, $fetchMode = null, ...$fetchModeArgs)
     {
-        throw new BadMethodCallException('Not implemented');
+        $this->throw(
+            new BadMethodCallException('Not implemented')
+        );
     }
 }
