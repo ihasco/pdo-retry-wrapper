@@ -19,6 +19,8 @@ class Connection extends PDO
     private int $currentAttempts = 1;
     private ?Closure $exceptionCallback = null;
 
+    protected bool $transactionActive = false;
+
     public function __construct(Closure $connector, ?Closure $exceptionCallback = null)
     {
         $this->connector = $connector;
@@ -42,6 +44,12 @@ class Connection extends PDO
                 if (!$this->causedByLostConnection($e)) {
                     throw $e;
                 }
+
+                if ($this->transactionActive) {
+                    $this->transactionActive = false;
+                    break;
+                }
+
                 $forceReconnect = true;
                 $this->currentAttempts ++;
             }
@@ -102,11 +110,19 @@ class Connection extends PDO
 
     public function beginTransaction(): bool
     {
-        return $this->getPdo()->beginTransaction();
+        $value = $this->getPdo()->beginTransaction();
+
+        $this->transactionActive = true;
+
+        return $value;
     }
     public function commit(): bool
     {
-        return $this->getPdo()->commit();
+        $value = $this->getPdo()->commit();
+
+        $this->transactionActive = false;
+
+        return $value;
     }
     public function errorCode(): string
     {
@@ -147,7 +163,11 @@ class Connection extends PDO
     }
     public function rollBack(): bool
     {
-        return $this->getPdo()->rollBack();
+        $value = $this->getPdo()->rollBack();
+
+        $this->transactionActive = false;
+
+        return $value;
     }
     public function setAttribute($attribute, $value): bool
     {

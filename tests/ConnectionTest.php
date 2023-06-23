@@ -123,6 +123,48 @@ class ConnectionTest extends TestCase
     /**
     * @test
     */
+    public function does_not_reconnect_if_transaction_active()
+    {
+        $connection = $this->mockedConnection(null, 'server has gone away');
+        $connection->setMaxAttempts(5);
+        $connection->beginTransaction();
+        
+        try {
+            $connection->runQuery('select * from users');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals(1, $exception->getAttempts());
+        }
+    }
+
+    /**
+    * @test
+    */
+    public function transaction_failure_does_not_affect_future_queries()
+    {
+        $connection = $this->mockedConnection(null, 'server has gone away');
+        $connection->setMaxAttempts(5);
+
+        // First we'll initiate a transaction - which should fail.
+
+        try {
+            $connection->beginTransaction();
+            $connection->runQuery('select * from users');
+        } catch (ConnectionException $exception) {
+            // (We just want to suppress this.)
+        }
+        
+        // Now we'll try another query - which should retry as usual.
+
+        try {
+            $connection->runQuery('select * from users');
+        } catch (ConnectionException $exception) {
+            $this->assertSame(5, $exception->getAttempts());
+        }
+    }
+
+    /**
+    * @test
+    */
     public function it_implements_pdo_helpers()
     {
         $pdo = $this->realConnection();
