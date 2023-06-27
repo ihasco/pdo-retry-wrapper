@@ -121,6 +121,59 @@ class ConnectionTest extends TestCase
     }
 
     /**
+     * @test
+     */
+    public function does_not_reconnect_if_transaction_active()
+    {
+        $connection = $this->mockedConnection(null, 'server has gone away');
+        $connection->setMaxAttempts(5);
+        $connection->beginTransaction();
+        
+        try {
+            $connection->runQuery('select * from users');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals(1, $exception->getAttempts());
+        }
+    }
+
+    /**
+     * @test
+     *
+     * If an error occurs during a transaction, an exception will be thrown.
+     * However, once the exception has been handled, it's not impossible that
+     * more queries may be executed. To that end, the failure of a transaction
+     * should not interfere with any future queries.
+     */
+    public function transaction_failure_does_not_affect_future_queries()
+    {
+        $mock = new PDOExceptionThrower('sqlite::memory:');
+
+        $connection = new Connection(fn () => $mock);
+
+        $connection->setMaxAttempts(5);
+
+        // First we'll initiate a transaction - which should fail.
+
+        try {
+            $mock->throwOnQuery('(not a connection issue)');
+            $connection->beginTransaction();
+            $connection->runQuery('select * from users');
+            $this->assertTrue(false, 'runQuery did not throw an exception');
+        } catch (PDOException $exception) {
+            // (We just want to suppress this.)
+        }
+        
+        // Now we'll try another query - which should retry as usual.
+
+        try {
+            $mock->throwOnQuery('server has gone away');
+            $connection->runQuery('select * from users');
+        } catch (ConnectionException $exception) {
+            $this->assertSame(5, $exception->getAttempts());
+        }
+    }
+
+    /**
     * @test
     */
     public function it_implements_pdo_helpers()

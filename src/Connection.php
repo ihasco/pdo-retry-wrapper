@@ -4,6 +4,7 @@ namespace iHasco\PdoRetryWrapper;
 
 use PDO;
 use Closure;
+use Exception;
 use Throwable;
 use PDOStatement;
 use BadMethodCallException;
@@ -18,6 +19,8 @@ class Connection extends PDO
     private int $maxAttempts = 3;
     private int $currentAttempts = 1;
     private ?Closure $exceptionCallback = null;
+
+    protected bool $transactionActive = false;
 
     public function __construct(Closure $connector, ?Closure $exceptionCallback = null)
     {
@@ -40,13 +43,25 @@ class Connection extends PDO
                 return $this->connectAndPerformQuery($sql, $bindings, $options, $forceReconnect);
             } catch (Throwable $e) {
                 if (!$this->causedByLostConnection($e)) {
-                    throw $e;
+                    $this->throw($e);
                 }
+
+                if ($this->transactionActive) {
+                    break;
+                }
+
                 $forceReconnect = true;
                 $this->currentAttempts ++;
             }
         }
         return $this->throwConnectionException($e, $sql, $bindings);
+    }
+
+    protected function throw(Exception $exception): void
+    {
+        $this->transactionActive = false;
+
+        throw $exception;
     }
 
     private function throwConnectionException(Throwable $originalException, string $sql, ?array $bindings)
@@ -60,7 +75,7 @@ class Connection extends PDO
         if ($this->exceptionCallback) {
             call_user_func($this->exceptionCallback, $connectionException);
         }
-        throw $connectionException;
+        $this->throw($connectionException);
     }
 
     private function connectAndPerformQuery(string $sql, ?array $bindings, ?array $options = [], bool $forceReconnect = false): PDOStatement
@@ -102,11 +117,19 @@ class Connection extends PDO
 
     public function beginTransaction(): bool
     {
-        return $this->getPdo()->beginTransaction();
+        $value = $this->getPdo()->beginTransaction();
+
+        $this->transactionActive = true;
+
+        return $value;
     }
     public function commit(): bool
     {
-        return $this->getPdo()->commit();
+        $value = $this->getPdo()->commit();
+
+        $this->transactionActive = false;
+
+        return $value;
     }
     public function errorCode(): string
     {
@@ -147,7 +170,11 @@ class Connection extends PDO
     }
     public function rollBack(): bool
     {
-        return $this->getPdo()->rollBack();
+        $value = $this->getPdo()->rollBack();
+
+        $this->transactionActive = false;
+
+        return $value;
     }
     public function setAttribute($attribute, $value): bool
     {
@@ -160,6 +187,8 @@ class Connection extends PDO
     #[\ReturnTypeWillChange]
     public function query($statement, $fetchMode = null, ...$fetchModeArgs)
     {
-        throw new BadMethodCallException('Not implemented');
+        $this->throw(
+            new BadMethodCallException('Not implemented')
+        );
     }
 }
