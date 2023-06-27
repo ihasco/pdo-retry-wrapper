@@ -158,6 +158,7 @@ class ConnectionTest extends TestCase
             $mock->throwOnQuery('(not a connection issue)');
             $connection->beginTransaction();
             $connection->runQuery('select * from users');
+            $this->assertTrue(false, 'runQuery did not throw an exception');
         } catch (PDOException $exception) {
             // (We just want to suppress this.)
         }
