@@ -1,4 +1,4 @@
-FROM ihasco/application-package-base-php81
+FROM ihasco/application-package-base-php83
 ARG composer_token
 ARG with_xdebug
 RUN composer config -g github-oauth.github.com $composer_token && \
