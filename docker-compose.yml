@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+
+  project:
+    image: ${PROJECT_NAME}
+    build:
+      context: ./.docker
+      args:
+        composer_token: ${COMPOSER_TOKEN}
+        with_xdebug: ${WITH_XDEBUG}
+    user: 1000:1000
+    networks:
+      - ihasco_local
+    working_dir: /opt/project
+    volumes:
+      - .:/opt/project
+
+networks:
+  ihasco_local:
+    driver: bridge
+    external: true
