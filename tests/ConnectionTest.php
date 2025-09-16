@@ -34,7 +34,7 @@ class ConnectionTest extends TestCase
         $this->assertInstanceOf(PDOStatement::class, $result);
         $users = $result->fetchAll();
         $this->assertCount(2, $users);
-        $this->assertEquals('two@example.com', $users[1]['email']);
+        $this->assertSame('two@example.com', $users[1]['email']);
     }
 
     /**
@@ -132,7 +132,7 @@ class ConnectionTest extends TestCase
         try {
             $connection->runQuery('select * from users');
         } catch (ConnectionException $exception) {
-            $this->assertEquals(1, $exception->getAttempts());
+            $this->assertSame(1, $exception->getAttempts());
         }
     }
 
