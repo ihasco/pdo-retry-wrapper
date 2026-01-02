@@ -3,5 +3,6 @@
 /.phpunit.result.cache
 /phpunit.xml
 /composer.lock
+/.env
 /.php_cs.cache
 .idea

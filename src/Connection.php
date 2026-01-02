@@ -187,8 +187,6 @@ class Connection extends PDO
     #[\ReturnTypeWillChange]
     public function query($statement, $fetchMode = null, ...$fetchModeArgs)
     {
-        $this->throw(
-            new BadMethodCallException('Not implemented')
-        );
+        throw new BadMethodCallException('Not implemented');
     }
 }
