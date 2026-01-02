@@ -10,6 +10,7 @@ class PDOExceptionThrower extends PDO
     private ?string $connectionException = null;
     private ?string $queryException = null;
 
+    #[\ReturnTypeWillChange]
     public function prepare($statement, $options = null)
     {
         if ($this->connectionException) {

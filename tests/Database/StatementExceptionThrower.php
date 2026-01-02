@@ -16,6 +16,7 @@ class StatementExceptionThrower extends PDOStatement
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function execute($bindings = null)
     {
         throw new PDOException($this->queryException);
