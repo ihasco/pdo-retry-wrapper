@@ -187,6 +187,7 @@ class Connection extends PDO
     #[\ReturnTypeWillChange]
     public function query($statement, $fetchMode = null, ...$fetchModeArgs)
     {
+        // @phpstan-ignore return.missing
         $this->throw(
             new BadMethodCallException('Not implemented')
         );
