@@ -22,13 +22,13 @@
         "illuminate/database": "^8.5 || ^9.0 || ^10.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
+        "phpunit/phpunit": "^9.6",
         "phpstan/phpstan": "^1.4",
         "symfony/var-dumper": "^5.3",
         "friendsofphp/php-cs-fixer": "^3.1"
     },
     "scripts": {
-        "phpunit": "./vendor/bin/phpunit --testdox tests",
+        "phpunit": "./vendor/bin/phpunit --testdox",
         "phpstan": "phpstan analyse src --level=0 --ansi",
         "phpcs": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix -v --diff --allow-risky=yes --verbose --format=txt --dry-run",
         "phpcs-fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix -v --diff --allow-risky=yes --verbose --format=txt",
